@@ -234,11 +234,13 @@ public class EasyPredictModelWrapper implements java.io.Serializable {
   }
 
   private void fillRawData(RowData data, double[] rawData) throws PredictException {
+    Integer nullCount = 0;
     for (String dataColumnName : data.keySet()) {
       Integer index = modelColumnNameToIndexMap.get(dataColumnName);
 
       // Skip column names that are not known.
       if (index == null) {
+        nullCount++;
         continue;
       }
 
@@ -278,6 +280,9 @@ public class EasyPredictModelWrapper implements java.io.Serializable {
           throw new PredictUnknownTypeException("Unknown object type " + o.getClass().getName());
         }
       }
+    }
+    if (nullCount == data.keySet().size()) {
+      throw new PredictException("All keys in RowData are not in POJO schema");
     }
   }
 
