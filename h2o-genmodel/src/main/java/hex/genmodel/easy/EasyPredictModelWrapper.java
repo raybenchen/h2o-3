@@ -7,6 +7,7 @@ import hex.genmodel.GenModel;
 import hex.genmodel.easy.exception.PredictException;
 import hex.genmodel.easy.exception.PredictUnknownCategoricalLevelException;
 import hex.genmodel.easy.exception.PredictUnknownTypeException;
+import hex.genmodel.easy.exception.PredictBadSchemaException;
 import hex.genmodel.easy.exception.PredictWrongModelCategoryException;
 import hex.genmodel.easy.prediction.AbstractPrediction;
 import hex.genmodel.easy.prediction.AutoEncoderModelPrediction;
@@ -234,16 +235,16 @@ public class EasyPredictModelWrapper implements java.io.Serializable {
   }
 
   private void fillRawData(RowData data, double[] rawData) throws PredictException {
-    Integer nullCount = 0;
+    Integer fieldsFound = 0;
     for (String dataColumnName : data.keySet()) {
       Integer index = modelColumnNameToIndexMap.get(dataColumnName);
 
       // Skip column names that are not known.
       if (index == null) {
-        nullCount++;
         continue;
       }
 
+      fieldsFound++;
       String[] domainValues = m.getDomainValues(index);
       if (domainValues == null) {
         // Column has numeric value.
@@ -281,8 +282,8 @@ public class EasyPredictModelWrapper implements java.io.Serializable {
         }
       }
     }
-    if (nullCount == data.keySet().size()) {
-      throw new PredictException("All keys in RowData are not in POJO schema");
+    if (fieldsFound == 0) {
+      throw new PredictBadSchemaException("All keys in RowData are not in POJO schema");
     }
   }
 
