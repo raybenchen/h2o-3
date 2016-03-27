@@ -40,9 +40,9 @@ class Test_glm_random_grid_search:
     increasing or decreasing.
     """
     # parameters set by users, change with care
-    max_col_count = 10         # set maximum values of train/test row and column counts
-    max_col_count_ratio = 50   # set max row count to be multiples of col_count to avoid over fitting
-    min_col_count_ratio = 10    # set min row count to be multiples of col_count to avoid over fitting
+    max_col_count = 8         # set maximum values of train/test row and column counts
+    max_col_count_ratio = 500   # set max row count to be multiples of col_count to avoid over fitting
+    min_col_count_ratio = 200    # set min row count to be multiples of col_count to avoid over fitting
 
     max_p_value = 2            # set maximum predictor value
     min_p_value = -2            # set minimum predictor value
@@ -183,6 +183,12 @@ class Test_glm_random_grid_search:
         # self.max_real_number = 5
         # self.max_int_number = 5
         # end DEBUGGING
+
+        if 'gaussian' in self.family:       # increase data range
+            self.max_p_value *= 50
+            self.min_p_value *= 50
+            self.max_w_value *= 50
+            self.min_w_value *= 50
 
         # generate real value weight vector and training/validation/test data sets for GLM
         pyunit_utils.write_syn_floating_point_dataset_glm(self.training1_data_file, "",
