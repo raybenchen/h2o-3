@@ -404,9 +404,14 @@ class TestGLMGaussian:
         print("*******************************************************************************************")
         print("Test1: compares the linear regression weights/p-values computed from theory and H2O GLM.")
 
-        # get theoretical weights, p-values and mse
-        (self.test1_weight_theory, self.test1_p_values_theory, self.test1_mse_train_theory,
-         self.test1_mse_test_theory) = self.theoretical_glm(self.training_data_file, self.test_data_file, False, False)
+        try:
+            # get theoretical weights, p-values and mse
+            (self.test1_weight_theory, self.test1_p_values_theory, self.test1_mse_train_theory,
+            self.test1_mse_test_theory) = self.theoretical_glm(self.training_data_file, self.test_data_file,
+                                                               False, False)
+        except:
+            print("problems with lin-alg.  Got bad data set.")
+            sys.exit(0)
 
         # get H2O model
         model_h2o = H2OGeneralizedLinearEstimator(family=self.family, Lambda=0, compute_p_values=True,
@@ -647,8 +652,12 @@ class TestGLMGaussian:
         print("Test5: test the GLM with imputation of missing values with column averages.")
 
         # get theoretical weights, p-values and mse
-        (weight_theory, p_values_theory, mse_train_theory, mse_test_theory) = \
-            self.theoretical_glm(self.training_data_file_nans, self.test_data_file_nans, False, False)
+        try:
+            (weight_theory, p_values_theory, mse_train_theory, mse_test_theory) = \
+                self.theoretical_glm(self.training_data_file_nans, self.test_data_file_nans, False, False)
+        except:
+            print("Bad dataset, lin-alg package problem.")
+            sys.exit(0)
 
         # import training set and test set
         training_data = h2o.import_file(pyunit_utils.locate(self.training_data_file_nans))
@@ -709,9 +718,13 @@ class TestGLMGaussian:
         print("*******************************************************************************************")
         print("Test6: test the GLM with enum/real values.")
 
-        # get theoretical weights, p-values and mse
-        (weight_theory, p_values_theory, mse_train_theory, mse_test_theory) =\
-            self.theoretical_glm(self.training_data_file_enum_nans, self.test_data_file_enum_nans, True, False)
+        try:
+            # get theoretical weights, p-values and mse
+            (weight_theory, p_values_theory, mse_train_theory, mse_test_theory) =\
+                self.theoretical_glm(self.training_data_file_enum_nans, self.test_data_file_enum_nans, True, False)
+        except:
+            print("Bad data set.  Problem with lin-alg.")
+            sys.exit(0)
 
         # import training set and test set with missing values
         training_data = h2o.import_file(pyunit_utils.locate(self.training_data_file_enum_nans))
@@ -785,11 +798,15 @@ class TestGLMGaussian:
         print("*******************************************************************************************")
         print("Test7: test the GLM with imputation of missing enum/real values under lambda search.")
 
-        # get theoretical weights, p-values and mse
-        (weight_theory, p_values_theory, mse_train_theory, mse_test_theory) =\
-            self.theoretical_glm(self.training_data_file_enum_nans_true_one_hot,
-                                 self.test_data_file_enum_nans_true_one_hot, True, True,
-                                 validation_data_file=self.validation_data_file_enum_nans_true_one_hot)
+        try:
+            # get theoretical weights, p-values and mse
+            (weight_theory, p_values_theory, mse_train_theory, mse_test_theory) =\
+                self.theoretical_glm(self.training_data_file_enum_nans_true_one_hot,
+                                     self.test_data_file_enum_nans_true_one_hot, True, True,
+                                     validation_data_file=self.validation_data_file_enum_nans_true_one_hot)
+        except:
+            print("Bad data set.  Problem with lin-alg.")
+            sys.exit(0)
 
         # import training set and test set with missing values and true one hot encoding
         training_data = h2o.import_file(pyunit_utils.locate(self.training_data_file_enum_nans_true_one_hot))
