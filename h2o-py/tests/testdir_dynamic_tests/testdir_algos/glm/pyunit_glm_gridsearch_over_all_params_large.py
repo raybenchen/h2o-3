@@ -40,9 +40,9 @@ class Test_glm_grid_search:
     """
 
     # parameters set by users, change with care
-    max_col_count = 10         # set maximum values of train/test row and column counts
-    max_col_count_ratio = 50   # set max row count to be multiples of col_count to avoid over fitting
-    min_col_count_ratio = 10    # set min row count to be multiples of col_count to avoid over fitting
+    max_col_count = 8         # set maximum values of train/test row and column counts
+    max_col_count_ratio = 500   # set max row count to be multiples of col_count to avoid over fitting
+    min_col_count_ratio = 100    # set min row count to be multiples of col_count to avoid over fitting
 
     max_p_value = 2            # set maximum predictor value
     min_p_value = -2            # set minimum predictor value
