@@ -1711,7 +1711,10 @@ def extract_comparison_attributes_and_print_multinomial(model_h2o, h2o_model_tes
     compare_index += 1
     # this is logloss from training data set,
     if not(just_print[compare_index]) and not(can_be_better_than_template[compare_index]):
-        if h2o_logloss_train < template_logloss_train:    # H2O performed better than template which is not allowed
+        if (h2o_logloss_train < template_logloss_train) and \
+                (abs(h2o_logloss_train-template_logloss_train) > 1e-5):
+
+            # H2O performed better than template which is not allowed
             failed_test_number += 1     # increment failed_test_number and just print the results
             compare_two_arrays([h2o_logloss_train], [template_logloss_train], ignored_eps, allowed_diff,
                                compare_att_str[compare_index], h2o_att_str[compare_index],
