@@ -794,6 +794,8 @@ class TestGLMBinomial:
                                                   remove_collinear_columns=True)
         model_h2o.train(x=x_indices, y=y_index, training_frame=training_data)
 
+        print("Best lambda is {0}, best alpha is {1}".format(self.best_lambda, self.best_alpha)
+              
         # evaluate model over test data set
         model_h2o_metrics = model_h2o.model_performance(test_data=test_data)
 
@@ -1441,7 +1443,7 @@ def test_glm_binomial():
     test_glm_binomial.test1_glm_no_regularization()
     test_glm_binomial.test2_glm_lambda_search()
     test_glm_binomial.test3_glm_grid_search()
- #   test_glm_binomial.test4_glm_remove_collinear_columns()
+    test_glm_binomial.test4_glm_remove_collinear_columns()
     test_glm_binomial.test_num += 1
     test_glm_binomial.test5_missing_values()
     test_glm_binomial.test6_enum_missing_values()
