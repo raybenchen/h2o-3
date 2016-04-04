@@ -250,8 +250,8 @@ class TestGLMBinomial:
                                                                          self.max_col_count_ratio))
 
         # #  DEBUGGING setup_data, remember to comment them out once done.
-        self.train_col_count = 3
-        self.train_row_count = 500
+        # self.train_col_count = 3
+        # self.train_row_count = 500
         # end DEBUGGING
 
         # randomly set number of enum and real columns in the data set
