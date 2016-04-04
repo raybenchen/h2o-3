@@ -252,9 +252,7 @@ class Test_glm_random_grid_search:
 
         # change the value of lambda parameters to be from 0 to self.lambda_scale instead of 0 to 1.
         if "lambda" in list(self.hyper_params):
-            temp_list = [self.lambda_scale * x for x in self.hyper_params["lambda"]]
-
-            self.hyper_params["lambda"] = temp_list     # resolve scaling issue
+            self.hyper_params["lambda"] = [self.lambda_scale * x for x in self.hyper_params["lambda"]]
 
         # number of possible models being built:
         self.possible_number_models = pyunit_utils.count_models(self.hyper_params)

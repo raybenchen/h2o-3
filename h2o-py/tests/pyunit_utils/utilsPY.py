@@ -1938,7 +1938,7 @@ def add_fold_weights_offset_columns(h2o_frame, nfold_max_weight_offset, column_n
 
 def gen_grid_search(model_params, hyper_params, exclude_parameters, gridable_parameters, gridable_types,
                     gridable_defaults, max_int_number, max_int_val, min_int_val, max_real_number, max_real_val,
-                    min_real_val, quantize_level='1.0000'):
+                    min_real_val, quantize_level='1.00000000'):
     """
     This function is written to randomly generate griddable parameters for a gridsearch.  For parameters already
     found in hyper_params, no random list will be generated.  In addition, we will check to make sure that the
