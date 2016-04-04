@@ -118,8 +118,6 @@ class Test_glm_random_grid_search:
 
     # give the user opportunity to pre-assign hyper parameters for fixed values
     hyper_params = {}
-    hyper_params["fold_assignment"] = ['AUTO', 'Random', 'Modulo']
-    hyper_params["missing_values_handling"] = ['MeanImputation', 'Skip']
 
     # parameters to be excluded from hyper parameter list even though they may be gridable
     exclude_parameter_lists = ['tweedie_link_power', 'tweedie_variance_power']   # do not need these
@@ -150,6 +148,7 @@ class Test_glm_random_grid_search:
             # parameters denoting filenames with absolute paths
             self.training1_data_file = os.path.join(self.current_dir, self.family+"_"+self.training1_filename)
             self.weight_data_file = os.path.join(self.current_dir, self.family+"_"+self.weight_filename)
+            self.json_filename = self.family + "_" + self.json_filename
         else:
             print("Only binomial or gaussian is accepted as distribution family.")
             sys.exit(1)
@@ -243,12 +242,18 @@ class Test_glm_random_grid_search:
         (self.gridable_parameters, self.gridable_types, self.gridable_defaults) = \
             pyunit_utils.get_gridables(model._model_json["parameters"])
 
+        # give the user opportunity to pre-assign hyper parameters for fixed values
+        self.hyper_params = {}
+        self.hyper_params["fold_assignment"] = ['AUTO', 'Random', 'Modulo']
+        self.hyper_params["missing_values_handling"] = ['MeanImputation', 'Skip']
+
         # randomly generate griddable parameters
         (self.hyper_params, self.gridable_parameters, self.gridable_types, self.gridable_defaults) = \
             pyunit_utils.gen_grid_search(model._parms.keys(), self.hyper_params, self.exclude_parameter_lists,
                                          self.gridable_parameters, self.gridable_types, self.gridable_defaults,
                                          random.randint(1, self.max_int_number), self.max_int_val, self.min_int_val,
                                          random.randint(1, self.max_real_number), self.max_real_val, self.min_real_val)
+
 
         # change the value of lambda parameters to be from 0 to self.lambda_scale instead of 0 to 1.
         if "lambda" in list(self.hyper_params):
