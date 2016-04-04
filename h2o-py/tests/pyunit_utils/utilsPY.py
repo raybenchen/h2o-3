@@ -23,6 +23,7 @@ from h2o.estimators.glm import H2OGeneralizedLinearEstimator
 from h2o.estimators.kmeans import H2OKMeansEstimator
 from h2o.transforms.decomposition import H2OPCA
 from h2o.estimators.naive_bayes import H2ONaiveBayesEstimator
+from decimal import *
 import urllib.request, urllib.error, urllib.parse
 import numpy as np
 import shutil
@@ -1937,7 +1938,7 @@ def add_fold_weights_offset_columns(h2o_frame, nfold_max_weight_offset, column_n
 
 def gen_grid_search(model_params, hyper_params, exclude_parameters, gridable_parameters, gridable_types,
                     gridable_defaults, max_int_number, max_int_val, min_int_val, max_real_number, max_real_val,
-                    min_real_val):
+                    min_real_val, quantize_level='1.0000'):
     """
     This function is written to randomly generate griddable parameters for a gridsearch.  For parameters already
     found in hyper_params, no random list will be generated.  In addition, we will check to make sure that the
@@ -1955,6 +1956,7 @@ def gen_grid_search(model_params, hyper_params, exclude_parameters, gridable_par
     :param max_real_number: integer, size of real gridable parameter list
     :param max_real_val: float, maximum real value for real gridable parameter
     :param min_real_val: float, minimum real value for real gridable parameter
+    :param quantize_level: string representing the quantization level of floating point values generated randomly.
 
     :return: a tuple of hyper_params: dict of hyper parameters for gridsearch, true_gridable_parameters:
     a list of string containing names of truely gridable parameters, true_gridable_types: a list of string
@@ -1979,12 +1981,29 @@ def gen_grid_search(model_params, hyper_params, exclude_parameters, gridable_par
                     hyper_params[para_name] = list(set(np.random.random_integers(min_int_val, max_int_val,
                                                                                  max_int_number)))
                 elif 'double' in gridable_types[count_index]:
-                    hyper_params[para_name] = list(set(np.around(np.random.uniform(min_real_val, max_real_val,
-                                                                                   max_real_number), 8)))
+                    hyper_params[para_name] = fix_float_precision(list(np.random.uniform(min_real_val, max_real_val,
+                                                                     max_real_number)), quantize_level=quantize_level)
 
         count_index += 1
 
     return hyper_params, true_gridable_parameters, true_gridable_types, true_gridable_defaults
+
+
+def fix_float_precision(float_list, quantize_level='1.00000000'):
+    """
+    This function takes in a floating point tuple and attempt to change it to floating point number with fixed
+    precision.
+
+    :param float_list: tuple/list of floating point numbers
+    :param quantize_level: string, optional, represent the number of fix points we care
+
+    :return: tuple of floats to the exact precision specified in quantize_level
+    """
+    fixed_float = []
+    for num in float_list:
+        fixed_float.append(float(Decimal(num).quantize(Decimal(quantize_level))))
+
+    return list(set(fixed_float))
 
 
 def extract_used_params(model_param_names, grid_model_params, params_dict):

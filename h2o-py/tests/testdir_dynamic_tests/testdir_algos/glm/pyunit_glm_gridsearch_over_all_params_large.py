@@ -91,6 +91,7 @@ class Test_glm_grid_search:
     max_real_number = 10         # maximum number of real grid values to generate
 
     lambda_scale = 100          # scale the lambda values to be higher than 0 to 1
+    decimal_prec = 8            # set precision of fixed point numbers
 
     # parameters denoting filenames with absolute paths
     training1_data_file = os.path.join(current_dir, training1_filename)
@@ -250,6 +251,8 @@ class Test_glm_grid_search:
         if "lambda" in list(self.hyper_params):
             self.hyper_params["lambda"] = [self.lambda_scale * x for x in self.hyper_params["lambda"]]
 
+        # fixed the float precision again.  It might be changed with the scaling
+        self.hyper_params["lambda"] = pyunit_utils.fix_float_precision(self.hyper_params["lambda"])
         self.possible_number_models = pyunit_utils.count_models(self.hyper_params)
 
         # write out the jenkins job info into log files.
@@ -441,9 +444,11 @@ class Test_glm_grid_search:
                 self.test_failed += 1
                 self.test_failed_array[self.test_num] = 1
                 print("test3_illegal_name_value failed: Java error exception should not have been thrown! ")
-            print("test3_illegal_name_value passed: Java error exception should have been thrown and did.")
+            else:
+                print("test3_illegal_name_value passed: Java error exception should have been thrown and did.")
 
         sys.stdout.flush()
+
 
 def test_grid_search_for_glm_over_all_params():
     """
@@ -455,8 +460,8 @@ def test_grid_search_for_glm_over_all_params():
     test_glm_grid = Test_glm_grid_search()
     test_glm_grid.test1_glm_grid_search_over_params()
     test_glm_grid.test2_illegal_name_value()
-#    test_glm_grid.test3_illegal_name_value()       # need Rpeck's check in before running this one.
-#    test_glm_grid.tear_down()
+    test_glm_grid.test3_illegal_name_value()       # need Rpeck's check in before running this one.
+#    test_glm_grid.tear_down()  # no need for tear down since we do not want to remove files.
 
     if test_glm_grid.test_failed:  # exit with error if any tests have failed
         sys.exit(1)
