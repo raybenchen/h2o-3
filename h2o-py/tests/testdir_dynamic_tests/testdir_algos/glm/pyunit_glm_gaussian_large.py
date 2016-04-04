@@ -583,6 +583,7 @@ class TestGLMGaussian:
         y_index = training_data.ncol-1
         x_indices = list(range(y_index))
 
+        print("Best lambda is {0}, best alpha is {1}".format(self.best_lambda, self.best_alpha))
         # train H2O model with remove_collinear_columns=True
         model_h2o = H2OGeneralizedLinearEstimator(family=self.family, Lambda=self.best_lambda, alpha=self.best_alpha,
                                                   remove_collinear_columns=True)
@@ -943,7 +944,7 @@ def test_glm_gaussian():
     test_glm_gaussian.test1_glm_and_theory()
     test_glm_gaussian.test2_glm_lambda_search()
     test_glm_gaussian.test3_glm_grid_search()
- #   test_glm_gaussian.test4_glm_remove_collinear_columns()
+    test_glm_gaussian.test4_glm_remove_collinear_columns()
     test_glm_gaussian.test_num += 1
     test_glm_gaussian.test5_missing_values()
     test_glm_gaussian.test6_enum_missing_values()
