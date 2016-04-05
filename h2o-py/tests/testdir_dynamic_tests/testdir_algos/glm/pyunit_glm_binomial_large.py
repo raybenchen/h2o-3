@@ -794,7 +794,7 @@ class TestGLMBinomial:
                                                   remove_collinear_columns=True)
         model_h2o.train(x=x_indices, y=y_index, training_frame=training_data)
 
-        print("Best lambda is {0}, best alpha is {1}".format(self.best_lambda, self.best_alpha)
+        print("Best lambda is {0}, best alpha is {1}".format(self.best_lambda, self.best_alpha))
               
         # evaluate model over test data set
         model_h2o_metrics = model_h2o.model_performance(test_data=test_data)
