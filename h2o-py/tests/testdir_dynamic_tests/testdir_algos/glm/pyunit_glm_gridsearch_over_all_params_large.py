@@ -401,7 +401,7 @@ class Test_glm_grid_search:
         model.  Depending on the random error_number generated, the following is being done to the model parameter
         and hyper-parameter:
 
-        error_number = 0: set model parameter to be  a value out of the hyper-parameter value list, should not
+        error_number = 0: set model parameter to be  a value in the hyper-parameter value list, should
         generate error;
         error_number = 1: set model parameter to be default value, should not generate error in this case;
         error_number = 3: make sure model parameter is not set to default and choose a value not in the
@@ -433,14 +433,14 @@ class Test_glm_grid_search:
             grid_model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data)
 
             # if error_number = 0 or 1, it is okay.  Else it should fail.
-            if not ((error_number == 0) or (error_number == 1)):
+            if not (error_number == 1):
                 self.test_failed += 1
                 self.test_failed_array[self.test_num] = 1
                 print("test3_illegal_name_value failed: Java error exception should have been thrown but did not!")
 
             print("test3_illegal_name_value passed: Java error exception should not have been thrown and did not!")
         except:
-            if (error_number == 0) or (error_number == 1):
+            if error_number == 1:
                 self.test_failed += 1
                 self.test_failed_array[self.test_num] = 1
                 print("test3_illegal_name_value failed: Java error exception should not have been thrown! ")
