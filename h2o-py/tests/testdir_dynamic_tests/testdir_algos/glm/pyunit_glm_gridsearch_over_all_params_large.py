@@ -460,7 +460,7 @@ def test_grid_search_for_glm_over_all_params():
     test_glm_grid = Test_glm_grid_search()
     test_glm_grid.test1_glm_grid_search_over_params()
     test_glm_grid.test2_illegal_name_value()
-#    test_glm_grid.test3_illegal_name_value()       # need Rpeck's check in before running this one.
+    test_glm_grid.test3_illegal_name_value()       # need Rpeck's check in before running this one.
 #    test_glm_grid.tear_down()  # no need for tear down since we do not want to remove files.
 
     if test_glm_grid.test_failed:  # exit with error if any tests have failed
