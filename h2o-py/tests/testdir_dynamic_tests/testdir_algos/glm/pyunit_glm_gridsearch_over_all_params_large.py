@@ -173,8 +173,8 @@ class Test_glm_grid_search:
                                                                            self.max_col_count_ratio))
 
         #  DEBUGGING setup_data, remember to comment them out once done.
-        self.train_col_count = 3
-        self.train_row_count = 200
+        # self.train_col_count = 3
+        # self.train_row_count = 200
         # self.max_real_number = 3
         # self.max_int_number = 3
         # end DEBUGGING
