@@ -40,6 +40,7 @@ class Test_glm_random_grid_search:
     increasing or decreasing.
     """
     # parameters set by users, change with care
+    # parameters set by users, change with care
     max_col_count = 4         # set maximum values of train/test row and column counts
     max_col_count_ratio = 300   # set max row count to be multiples of col_count to avoid over fitting
     min_col_count_ratio = 200    # set min row count to be multiples of col_count to avoid over fitting
@@ -80,29 +81,28 @@ class Test_glm_random_grid_search:
 
     data_type = 2               # determine data type of data set and weight, 1: integers, 2: real
 
-    max_int_val = 1000            # maximum size of random integer values
+    max_int_val = 1000          # maximum size of random integer values
     min_int_val = 0             # minimum size of random integer values
-    max_int_number = 12          # maximum number of integer random grid values to generate
+    max_int_number = 5          # maximum number of integer random grid values to generate
 
-    max_real_val = 1          # maximum size of random float values
+    max_real_val = 1            # maximum size of random float values
     min_real_val = 0.0          # minimum size of random float values
-    max_real_number = 12         # maximum number of real grid values to generate
+    max_real_number = 5         # maximum number of real grid values to generate
 
     lambda_scale = 100          # scale lambda value to be from 0 to 100 instead of 0 to 1
 
-    possible_number_models = 0       # possible number of models built based on hyper-parameter specification
-    max_model_number = 0        # maximum number of models specified to test for stopping conditions, generated later
-    max_grid_runtime = 0     # maximum runtime value, generated later
-    allowed_scaled_overtime = 1.1   # used to set max_allowed_runtime as allowed_scaled_overtime * total model run
-                                    # time
+    possible_number_models = 0      # possible number of models built based on hyper-parameter specification
+    max_model_number = 0    # maximum number of models specified to test for stopping conditions, generated later
+    max_grid_runtime = 600          # maximum runtime value in seconds, 10 minutes
+    allowed_scaled_overtime = 1.1   # used to set max_allowed_runtime as allowed_scaled_overtime * total model run time
     allowed_scaled_model_number = 1.5   # used to set max_model_number as
-                                        # possible_number_models * allowed_scaled_model_number
+    # possible_number_models * allowed_scaled_model_number
     max_stopping_rounds = 10            # maximum stopping rounds allowed to be used for early stopping metric
     max_tolerance = 0.01                   # maximum tolerance to be used for early stopping metric
 
     family = 'gaussian'     # set gaussian as default
 
-    test_name = "pyunit_glm_gridsearch_randomdiscrete_large.py"     # name of this test
+    test_name = "pyunit_glm_gaussian_gridsearch_randomdiscrete_large.py"     # name of this test
     sandbox_dir = ""  # sandbox directory where we are going to save our failed test data sets
 
     # store information about training/test data sets
@@ -332,8 +332,11 @@ class Test_glm_random_grid_search:
         self.test_num += 1
         sys.stdout.flush()
 
-        # gset max_allowed_runtime as total run time to build all models * (1+fraction)
-        self.max_grid_runtime = pyunit_utils.find_grid_runtime(random_grid_model.models)
+        # want to remove the max runtime in hyper-parameter since they are already in search_criteria
+        if "max_runtime_secs" in list(self.hyper_params):
+            del self.hyper_params['max_runtime_secs']
+            # number of possible models being built:
+            self.possible_number_models = pyunit_utils.count_models(self.hyper_params)
 
     def test2_glm_random_grid_search_max_model(self):
         """
@@ -472,6 +475,7 @@ class Test_glm_random_grid_search:
 
         self.test_num += 1
 
+
 def test_random_grid_search_for_glm():
     """
     Create and instantiate classes, call test methods to test randomize grid search for GLM Gaussian
@@ -481,18 +485,14 @@ def test_random_grid_search_for_glm():
     """
 
     # randomize grid search for Binomial
+    start_time = time.clock()
     test_glm_binomial_random_grid = Test_glm_random_grid_search("binomial")
-    start_time = time.time()
     test_glm_binomial_random_grid.test1_glm_random_grid_search_model_number("logloss(xval=True)")
-    print("test 1 run time is {0}".format(time.time() - start_time))
     test_glm_binomial_random_grid.test2_glm_random_grid_search_max_model()
     test_glm_binomial_random_grid.test3_glm_random_grid_search_max_runtime_secs()
-    start_time = time.time()
     test_glm_binomial_random_grid.test4_glm_random_grid_search_metric("logloss", False)
-    print("test 4 metric run time is {0}".format(time.time() - start_time))
-    start_time = time.time()
     test_glm_binomial_random_grid.test4_glm_random_grid_search_metric("AUC", True)
-    print("test 4 metric run time is {0}".format(time.time() - start_time))
+    print("Binomial randomized gridsearch run time is {0}".format(time.clock() - start_time))
 #    test_glm_binomial_random_grid.tear_down()
 
     # exit with error if any tests have failed

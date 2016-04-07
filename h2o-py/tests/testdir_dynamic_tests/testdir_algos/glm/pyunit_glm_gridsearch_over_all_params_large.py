@@ -84,15 +84,16 @@ class Test_glm_grid_search:
     data_type = 2               # determine data type of data set and weight, 1: integers, 2: real
 
     max_int_val = 10            # maximum size of random integer values
-    min_int_val = -10             # minimum size of random integer values
-    max_int_number = 10          # maximum number of integer random grid values to generate
+    min_int_val = -10           # minimum size of random integer values
+    max_int_number = 5         # maximum number of integer random grid values to generate
 
-    max_real_val = 1          # maximum size of random float values
-    min_real_val = -1          # minimum size of random float values
-    max_real_number = 10         # maximum number of real grid values to generate
+    max_real_val = 1            # maximum size of random float values
+    min_real_val = -1           # minimum size of random float values
+    max_real_number = 5        # maximum number of real grid values to generate
 
-    lambda_scale = 50          # scale the lambda values to be higher than 0 to 1
+    lambda_scale = 50           # scale the lambda values to be higher than 0 to 1
     alpha_scale = 1.2           # scale alpha into bad ranges
+    time_scale = 1            # maximum runtime of 100seconds
 
     # parameters denoting filenames with absolute paths
     training1_data_file = os.path.join(current_dir, training1_filename)
@@ -258,19 +259,23 @@ class Test_glm_grid_search:
         if "lambda" in list(self.hyper_params_bad):
             self.hyper_params_bad["lambda"] = [self.lambda_scale * x for x in self.hyper_params_bad["lambda"]]
 
+        if "max_runtime_secs" in list(self.hyper_params_bad):
+            self.hyper_params_bad["max_runtime_secs"] = [self.time_scale * x for x
+                                                         in self.hyper_params_bad["max_runtime_secs"]]
+
         self.possible_number_models = pyunit_utils.count_models(self.hyper_params_bad)
 
         # exclude the bad parameters since they will not result in any models being built
         alpha_len = len(self.hyper_params_bad["alpha"])
         lambda_len = len(self.hyper_params_bad["lambda"])
+        time_len = len(self.hyper_params_bad["max_runtime_secs"])
         len_good_alpha = len([x for x in self.hyper_params_bad["alpha"] if (x >= 0) and (x <= 1)])
         len_good_lambda = len([x for x in self.hyper_params_bad["lambda"] if (x >= 0)])
+        len_good_time = len([x for x in self.hyper_params_bad["max_runtime_secs"] if (x >= 0)])
 
-        if (len_good_alpha > 0) and (len_good_lambda > 0):
-            self.possible_number_models = int(self.possible_number_models *
-                                              len_good_alpha * len_good_lambda / (alpha_len * lambda_len))
-        else:
-            self.possible_number_models = 0
+        self.possible_number_models = int(self.possible_number_models * len_good_alpha * len_good_lambda *
+                                          len_good_time/ (alpha_len * lambda_len * time_len))
+
 
         # randomly generate griddable parameters with only good values
         (self.hyper_params, self.gridable_parameters, self.gridable_types, self.gridable_defaults) = \
@@ -287,8 +292,9 @@ class Test_glm_grid_search:
         if "lambda" in list(self.hyper_params):
             self.hyper_params["lambda"] = [self.lambda_scale * x for x in self.hyper_params["lambda"]]
 
-        # fixed the float precision again.  It might be changed with the scaling
-        self.hyper_params["lambda"] = pyunit_utils.fix_float_precision(self.hyper_params["lambda"])
+        if "max_runtime_secs" in list(self.hyper_params):
+            self.hyper_params["max_runtime_secs"] = [self.time_scale * x for x
+                                                     in self.hyper_params["max_runtime_secs"]]
 
         # write out the jenkins job info into log files.
         json_file = os.path.join(self.sandbox_dir, self.json_filename)
