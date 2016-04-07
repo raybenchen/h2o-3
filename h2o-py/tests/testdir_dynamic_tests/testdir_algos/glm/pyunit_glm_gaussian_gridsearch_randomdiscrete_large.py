@@ -494,6 +494,24 @@ def test_random_grid_search_for_glm():
     print("test 4 metric run time is {0}".format(time.time() - start_time))
 #    test_glm_gaussian_random_grid.tear_down()
 
+<<<<<<< HEAD:h2o-py/tests/testdir_dynamic_tests/testdir_algos/glm/pyunit_glm_gaussian_gridsearch_randomdiscrete_large.py
+=======
+    # randomize grid search for Binomial
+    test_glm_binomial_random_grid = Test_glm_random_grid_search("binomial")
+    start_time = time.time()
+    test_glm_binomial_random_grid.test1_glm_random_grid_search_model_number("logloss(xval=True)")
+    print("test 1 run time is {0}".format(time.time() - start_time))
+    test_glm_binomial_random_grid.test2_glm_random_grid_search_max_model()
+    test_glm_binomial_random_grid.test3_glm_random_grid_search_max_runtime_secs()
+    start_time = time.time()
+    test_glm_binomial_random_grid.test4_glm_random_grid_search_metric("logloss", False)
+    print("test 4 metric run time is {0}".format(time.time() - start_time))
+    start_time = time.time()
+    test_glm_binomial_random_grid.test4_glm_random_grid_search_metric("AUC", True)
+    print("test 4 metric run time is {0}".format(time.time() - start_time))
+#    test_glm_binomial_random_grid.tear_down()
+
+>>>>>>> 2219066862dba2ef84bb1a80f49d38410c0d491f:h2o-py/tests/testdir_dynamic_tests/testdir_algos/glm/pyunit_glm_gridsearch_randomdiscrete_large.py
     # exit with error if any tests have failed
     if test_glm_gaussian_random_grid.test_failed > 0:
         sys.exit(1)
