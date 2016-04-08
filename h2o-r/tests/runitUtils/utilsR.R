@@ -420,3 +420,49 @@ h2o_and_R_equal <- function(h2o_obj, r_obj, tolerance = 1e-6) {
     expect_true(all(abs(df_h2o_obj_free - df_r_na_free) < tolerance))
   
 }
+
+#----------------------------------------------------------------------
+# genRegressionData generate a random data set according to the following formula
+# y = W * X + e where e is random Gaussian noise, W is randomly generated and
+# X is the randomly generated predictors
+#
+# Parameters:  col_number -- Integer, number of .
+#
+# Returns:     data frame containing the predictors and response at the end
+#----------------------------------------------------------------------
+genRegressionData <- function(col_number, row_number, max_w_value, min_w_value, max_p_value, min_p_value, noise_std) {
+
+  # generate random predictor
+  data = matrix(runif(col_number*row_number, min_p_value, max_p_value), row_number, col_number)
+  weight = matrix(runif(col_number, min_w_value, max_w_value), col_number, 1)  # generate random weight
+  noise = matrix(rnorm(row_number, mean=0, sd=noise_std), row_number, 1)        # generate random noise
+  bias = runif(1, min_w_value, max_w_value) * matrix(rep(1, row_number), row_number, 1)   # random bias
+
+  response = data %*% weight + bias + noise   # form the response
+
+  training_data = as.data.frame(cbind(data, response))  # generate data frame from predictor and response
+
+  return(training_data)
+}
+
+#----------------------------------------------------------------------
+# hyperSpaceDimension calculate the possible number of gridsearch model
+# that should be built based on the current hyper-space parameters specified.
+# However, if your model contains bad parameter values, the actual number of
+# models that can be built will be less.  You should take care of that yourself.
+# Hence, this function will give you an upper bound of the actual model number.
+#
+# Parameters:  hyper_parameters -- Integer, number of .
+#
+# Returns:     data frame containing the predictors and response at the end
+#----------------------------------------------------------------------
+hyperSpaceDimension <- function(hyper_parameters) {
+  num_param = length(hyper_parameters)
+  total_dim = 1
+
+  for (index in 1:num_param) {
+    total_dim = total_dim * length(hyper_parameters[[index]])
+  }
+
+  return(total_dim)
+}
