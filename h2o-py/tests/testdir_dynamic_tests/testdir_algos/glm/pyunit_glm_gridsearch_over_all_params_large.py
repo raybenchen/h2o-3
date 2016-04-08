@@ -93,7 +93,7 @@ class Test_glm_grid_search:
 
     lambda_scale = 50           # scale the lambda values to be higher than 0 to 1
     alpha_scale = 1.2           # scale alpha into bad ranges
-    time_scale = 1            # maximum runtime of 100seconds
+    time_scale = 0.01            # maximum runtime of
 
     # parameters denoting filenames with absolute paths
     training1_data_file = os.path.join(current_dir, training1_filename)

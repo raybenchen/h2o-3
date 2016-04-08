@@ -30,8 +30,7 @@ class Test_glm_random_grid_search:
     I have written 4 tests:
     1. test1_glm_random_grid_search_model_number: this test will not put any stopping conditions
     on randomized search.  The purpose here is to make sure that randomized search will give us all possible
-    hyper-parameter combinations.  In addition, gridsearch is run and we compare the performance of the two grid
-    search results to make sure we are getting comparable performances;
+    hyper-parameter combinations;
     2. test2_glm_random_grid_search_max_model: this test the stopping condition of setting the max_model in
     search criteria;
     3. test3_glm_random_grid_search_max_runtime_secs: this test the stopping condition max_runtime_secs
@@ -89,11 +88,12 @@ class Test_glm_random_grid_search:
     max_real_number = 5         # maximum number of real grid values to generate
 
     lambda_scale = 100          # scale lambda value to be from 0 to 100 instead of 0 to 1
+    max_runtime_scale = 0.01    # scale the max runtime to be from 0 to 0.01 seconds
 
     possible_number_models = 0      # possible number of models built based on hyper-parameter specification
     max_model_number = 0    # maximum number of models specified to test for stopping conditions, generated later
-    max_grid_runtime = 600          # maximum runtime value in seconds, 10 minutes
-    allowed_scaled_overtime = 1.1   # used to set max_allowed_runtime as allowed_scaled_overtime * total model run time
+    max_grid_runtime = 1          # maximum runtime value in seconds, set later
+    allowed_scaled_overtime = 0.1   # used to set max_allowed_runtime as allowed_scaled_overtime * total model run time
     allowed_scaled_model_number = 1.5   # used to set max_model_number as
                                         # possible_number_models * allowed_scaled_model_number
     max_stopping_rounds = 10            # maximum stopping rounds allowed to be used for early stopping metric
@@ -258,6 +258,12 @@ class Test_glm_random_grid_search:
         if "lambda" in list(self.hyper_params):
             self.hyper_params["lambda"] = [self.lambda_scale * x for x in self.hyper_params["lambda"]]
 
+
+            # change the value of runtime parameters to be from 0 to self.lambda_scale instead of 0 to 1.
+        if "max_runtime_secs" in list(self.hyper_params):
+            self.hyper_params["max_runtime_secs"] = [self.max_runtime_scale * x for x
+                                                     in self.hyper_params["max_runtime_secs"]]
+
         # number of possible models being built:
         self.possible_number_models = pyunit_utils.count_models(self.hyper_params)
 
@@ -292,16 +298,13 @@ class Test_glm_random_grid_search:
             with open(json_file,'wb') as test_file:
                 json.dump(self.hyper_params, test_file)
 
-
         else:   # all tests have passed.  Delete sandbox if if was not wiped before
             pyunit_utils.make_Rsandbox_dir(self.current_dir, self.test_name, False)
 
     def test1_glm_random_grid_search_model_number(self, metric_name):
         """
         This test is used to make sure the randomized gridsearch will generate all models specified in the
-        hyperparameters if no stopping condition is given in the search criterion.  We will compare the
-        performance between the randomized gridsearch and normal gridsearch to make sure they generate the same
-        number of models and their performances are similar.
+        hyperparameters if no stopping condition is given in the search criterion.
 
         :param metric_name: string to denote what grid search model should be sort by
 
@@ -328,18 +331,14 @@ class Test_glm_random_grid_search:
             print("test1_glm_random_grid_search_model_number for GLM: failed, number of models generated"
                   "possible model number {0} and randomized gridsearch model number {1} are not "
                   "equal.".format(self.possible_number_models, len(random_grid_model)))
+        else:
+            self.max_grid_runtime = pyunit_utils.find_grid_runtime(random_grid_model)
 
         if self.test_failed_array[self.test_num] == 0:
             print("test1_glm_random_grid_search_model_number for GLM: passed!")
 
         self.test_num += 1
         sys.stdout.flush()
-
-        # want to remove the max runtime in hyper-parameter since they are already in search_criteria
-        if "max_runtime_secs" in list(self.hyper_params):
-            del self.hyper_params['max_runtime_secs']
-            # number of possible models being built:
-            self.possible_number_models = pyunit_utils.count_models(self.hyper_params)
 
     def test2_glm_random_grid_search_max_model(self):
         """
@@ -406,8 +405,17 @@ class Test_glm_random_grid_search:
         print("test3_glm_random_grid_search_max_runtime_secs for GLM " + self.family)
         h2o.cluster_info()
 
+        # want to remove the max runtime in hyper-parameter since they are already in search_criteria
+        model_built_time = self.max_grid_runtime/self.possible_number_models
+
+        # want to remove the max runtime in hyper-parameter since they are already in search_criteria
+        if "max_runtime_secs" in list(self.hyper_params):
+            del self.hyper_params['max_runtime_secs']
+            # number of possible models being built:
+            self.possible_number_models = pyunit_utils.count_models(self.hyper_params)
+
         # setup_data our stopping condition here
-        max_run_time_secs = random.uniform(0, self.max_grid_runtime * self.allowed_scaled_overtime)
+        max_run_time_secs = random.uniform(1e-8, model_built_time*self.max_real_number)
         search_criteria = {'strategy': 'RandomDiscrete', 'max_runtime_secs': max_run_time_secs,
                            "seed": round(time.time())}
         # search_criteria = {'strategy': 'RandomDiscrete', 'max_runtime_secs': 1/1e8}
@@ -424,6 +432,13 @@ class Test_glm_random_grid_search:
 
         if actual_run_time_secs <= search_criteria["max_runtime_secs"]*(1+self.allowed_diff):
             print("test3_glm_random_grid_search_max_runtime_secs: passed!")
+
+            if len(grid_model) > self.possible_number_models:   # generate too many models, something is wrong
+                self.test_failed += 1
+                self.test_failed_array[self.test_num] = 1
+                print("test3_glm_random_grid_search_max_runtime_secs: failed.  Generated {0} models "
+                      " which exceeds maximum possible model number {1}".format(len(grid_model),
+                                                                                self.possible_number_models))
         elif len(grid_model) == 1:  # will always generate 1 model
             print("test3_glm_random_grid_search_max_runtime_secs: passed!")
         else:
