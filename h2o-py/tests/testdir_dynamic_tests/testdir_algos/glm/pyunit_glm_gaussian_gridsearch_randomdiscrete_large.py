@@ -267,6 +267,10 @@ class Test_glm_random_grid_search:
         with open(json_file,'w') as test_file:
             json.dump(self.hyper_params, test_file)
 
+            # save hyper-parameter file in test directory
+        with open(os.path.join(self.current_dir, self.json_filename), 'w') as test_file:
+            json.dump(self.hyper_params, test_file)
+
     def tear_down(self):
         """
         This function performs teardown after the dynamic test is completed.  If all tests

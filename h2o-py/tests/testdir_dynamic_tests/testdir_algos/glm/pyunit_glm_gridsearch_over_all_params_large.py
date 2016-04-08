@@ -298,6 +298,11 @@ class Test_glm_grid_search:
         # write out the jenkins job info into log files.
         json_file = os.path.join(self.sandbox_dir, self.json_filename)
 
+        # save hyper-parameter file in test directory
+        with open(os.path.join(self.current_dir, self.json_filename), 'w') as test_file:
+            json.dump(self.hyper_params, test_file)
+
+        # save hyper-parameter file in sandbox
         with open(json_file,'w') as test_file:
             json.dump(self.hyper_params, test_file)
 
