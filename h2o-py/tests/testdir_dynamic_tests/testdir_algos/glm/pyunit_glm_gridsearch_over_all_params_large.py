@@ -98,7 +98,6 @@ class Test_glm_grid_search:
     # parameters denoting filenames with absolute paths
     training1_data_file = os.path.join(current_dir, training1_filename)
     training2_data_file = os.path.join(current_dir, training2_filename)
-
     weight_data_file = os.path.join(current_dir, weight_filename)
 
     families = ['gaussian', 'binomial', 'multinomial']    # distribution family to perform grid search over
@@ -300,7 +299,7 @@ class Test_glm_grid_search:
         json_file = os.path.join(self.sandbox_dir, self.json_filename)
 
         with open(json_file,'w') as test_file:
-            json.dump(self.hyper_params_bad, test_file)
+            json.dump(self.hyper_params, test_file)
 
     def tear_down(self):
         """
