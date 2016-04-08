@@ -14,7 +14,7 @@ test.GBM.bernoulli.SyntheticData <- function() {
 
     n <- 2000
     #  Generate variables V1, ... V10
-    X <- matrix(rnorm(10*n), n, 10)
+
     #  y = +1 if sum_i x_{ij}^2 > chisq median on 10 df
     y <- rep(-1, n)
     y[apply(X*X, 1, sum) > qchisq(.5, 10)] <- 1
