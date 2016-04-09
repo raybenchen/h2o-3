@@ -2229,13 +2229,22 @@ def find_grid_runtime(model_list):
     This function given a grid_model built by gridsearch will go into the model and calculate the total amount of
     time it took to actually build all the models in second
 
-    :param model_list: list of model built by gridsearch, cartesian or randomized
+    :param model_list: list of model built by gridsearch, cartesian or randomized with cross-validation
+                       enabled.
     :return: total_time_sec: total number of time in seconds in building all the models
     """
     total_time_sec = 0
 
     for each_model in model_list:
         total_time_sec += each_model._model_json["output"]["run_time"]  # time in ms
+
+        # if cross validation is used, need to add those run time in here too
+        if each_model._is_xvalidated:
+            xv_keys = each_model._xval_keys
+
+            for id in xv_keys:
+                each_xv_model = h2o.get_model(id)
+                total_time_sec += each_xv_model._model_json["output"]["run_time"]
 
     return total_time_sec/1000.0        # return total run time in seconds
 

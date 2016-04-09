@@ -426,9 +426,15 @@ h2o_and_R_equal <- function(h2o_obj, r_obj, tolerance = 1e-6) {
 # y = W * X + e where e is random Gaussian noise, W is randomly generated and
 # X is the randomly generated predictors
 #
-# Parameters:  col_number -- Integer, number of .
+# Parameters:  col_number -- Integer, number of predictors
+#              row_number -- Integer, number of training data samples
+#              max_w_value -- maximum weight/bias value allowed
+#              min_w_value -- minimum weight/bias value allowed
+#              max_p_value -- maximum predictor value allowed
+#              min_p_value -- minimum predictor value allowed
+#              noise_std -- noise standard deviation that is used to generate random noise
 #
-# Returns:     data frame containing the predictors and response at the end
+# Returns:     data frame containing the predictors and response as the last column
 #----------------------------------------------------------------------
 genRegressionData <- function(col_number, row_number, max_w_value, min_w_value, max_p_value, min_p_value, noise_std) {
 
@@ -454,7 +460,8 @@ genRegressionData <- function(col_number, row_number, max_w_value, min_w_value, 
 #
 # Parameters:  hyper_parameters -- Integer, number of .
 #
-# Returns:     data frame containing the predictors and response at the end
+# Returns:     integer representing the upper bound on number of grid search
+# models that can be generated
 #----------------------------------------------------------------------
 hyperSpaceDimension <- function(hyper_parameters) {
   num_param = length(hyper_parameters)
@@ -465,4 +472,34 @@ hyperSpaceDimension <- function(hyper_parameters) {
   }
 
   return(total_dim)
+}
+
+#----------------------------------------------------------------------
+# This function given a grid_id list built by gridsearch will grab the model and
+# go into the model and calculate the total amount of
+# time it took to actually build all the models in second
+#
+# :param model_list: list of model built by gridsearch, cartesian or randomized
+# :return: total_time_sec: total number of time in seconds in building all the models
+#
+# Parameters:  model_ids: list of model ids from which we can grab the actual model info
+#
+# Returns:     total_time_sec: total number of time in seconds in building all the models
+#----------------------------------------------------------------------
+find_grid_runtime <- function(model_ids) {
+  total_run_time = 0
+
+  all_models = lapply(model_ids, function(id) {model = h2o.getModel(id)})
+
+  for (model in all_models) {   # run_time is in ms
+    total_run_time = total_run_time + model@model$run_time
+    
+    # get run time of cross-validation
+    for (xv_model in model@model$cross_validation_models) {
+      temp_model = h2o.getModel(xv_model$name)
+      total_run_time = total_run_time + temp_model@model$run_time
+    }
+  }
+
+  return(total_run_time/1000.0)
 }
