@@ -52,7 +52,7 @@ test.GLM.Gaussian.Grid.Test1.SyntheticData <- function() {
   
   lambda_scale = 100
   alpha_scale = 1.2
-  time_scale = 0.01
+  time_scale = 0.1
   
   test_failed = 1   # set to 1 if test has failed for some reason, default to be bad
   
