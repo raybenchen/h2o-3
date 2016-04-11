@@ -255,6 +255,8 @@ class Test_glm_grid_search:
         model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data)
 
         run_time = pyunit_utils.find_grid_runtime([model])  # find model train time
+        print("Time taken to build a base barebone model is {0}".format(run_time))
+
         summary_list = model._model_json["output"]["model_summary"]
         num_iteration = summary_list.cell_values[0][summary_list.col_header.index('number_of_iterations')]
 
