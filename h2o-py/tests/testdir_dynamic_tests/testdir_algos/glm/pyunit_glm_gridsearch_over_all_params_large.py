@@ -506,8 +506,13 @@ class Test_glm_grid_search:
                       "parameter name or empty hyper-parameter parameter list but did not!")
 
         except:
-            print("test2_illegal_name_value passed: exception is thrown for illegal parameter name or empty"
+            if (error_number[0] <= 2) and (error_number[0] >= 0):
+                print("test2_illegal_name_value passed: exception is thrown for illegal parameter name or empty"
                   "hyper-parameter parameter list.")
+            else
+                self.test_failed += 1
+                self.test_failed_array[self.test_num] = 1
+                print("test2_illegal_name_value failed: exception should not have been thrown but did!")
 
         self.test_num += 1
 
@@ -549,14 +554,14 @@ class Test_glm_grid_search:
             grid_model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data)
 
             # if error_number = 0 or 1, it is okay.  Else it should fail.
-            if not (error_number == 1):
+            if not (error_number[0] == 1):
                 self.test_failed += 1
                 self.test_failed_array[self.test_num] = 1
                 print("test3_illegal_name_value failed: Java error exception should have been thrown but did not!")
 
             print("test3_illegal_name_value passed: Java error exception should not have been thrown and did not!")
         except:
-            if error_number == 1:
+            if error_number[0] == 1:
                 self.test_failed += 1
                 self.test_failed_array[self.test_num] = 1
                 print("test3_illegal_name_value failed: Java error exception should not have been thrown! ")
