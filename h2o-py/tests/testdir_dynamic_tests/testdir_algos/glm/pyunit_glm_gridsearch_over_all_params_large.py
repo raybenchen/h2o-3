@@ -20,24 +20,36 @@ from h2o.grid.grid_search import H2OGridSearch
 class Test_glm_grid_search:
     """
     This class is created to test the gridsearch with the GLM algo with Guassian, Binonmial or
-    Multinomial family.  Three tests are written to test the following:
+    Multinomial family.  Three tests are written to test the following conditions:
+    1. For hyper-parameters containing all legal parameter names and parameter value lists with legal
+    and illegal values, grid-models should be built for all combinations of legal parameter values.  For
+    illegal parameter values, a warning/error message should be printed out to warn the user but the
+    program should not throw an exception;
+    2. For hyper-parameters with illegal names, an exception should be thrown and no models should be built;
+    3. For parameters that are specified both in the hyper-parameters and model parameters, unless the values
+    specified in the model parameters are set to default values, an exception will be thrown since they are
+    not supposed to be specified in both places.
 
-    test1_glm_grid_search_over_params: grab all truely griddable parameters and randomly set
-    the parameter values if possible.  Otherwise, manually set those parameter values.  Next,
-    build many H2O GLM models using grid search.  Next, for each model built using grid search,
-    we will extract the parameters used in building that model and manually build a H2O GLM
-    model.  MSEs are calculated from a test set to compare the performance of grid search model
-    and our manually built model.  If their MSEs are close, declare test success.  Otherwise,
-    declare test failure.  Bad hyper-parameter values will set here to make sure no model is built
-    for those bad parameter values.  We should instead get a warning/error message printed out.
+    test1_glm_grid_search_over_params: test for condition 1 and performs the following:
+    a. grab all truely griddable parameters and randomly or manually
+    set the parameter values.
+    b. Next, build H2O GLM models using grid search.  Count and make sure models
+    are only built for hyper-parameters set to legal values.  No model is built for bad hyper-parameter
+    values will set here to make sure no model is built.  We should instead get a warning/error message printed out.
+    c. For each model built using grid search, we will extract the parameters used in building
+    that model and manually build a H2O GLM model.  MSEs are calculated from a test set
+    to compare the performance of grid search model and our manually built model.  If their MSEs
+    are close, declare test success.  Otherwise, declare test failure.
+    d. we will check and make sure the models are built within the time limit that was set
+    for it as well.  If max_runtime_secs was exceeded by too much, declare test failure as well.
 
     test3_glm_random_grid_search_max_runtime_secs: randomly go into the hyper_parameters that we have specified, either
     change the hyper_parameter name or insert an illegal value into the hyper_parameter list, check
-    to make sure that the test failed with error messages.
+    to make sure that the test failed with error messages.  We test for condition 1 and 2.
 
     test3_illegal_name_value: go into our hyper_parameters list, randomly choose some hyper-parameters
     to specify and use it in building our model.  Hence, the same parameter is specified both in the model
-    parameters and hyper-parameters.  Make sure the test failed with error messages.
+    parameters and hyper-parameters.  Make sure the test failed with error messages.  We test for condition 3.
     """
 
     # parameters set by users, change with care
@@ -66,6 +78,7 @@ class Test_glm_grid_search:
     training2_filename = "gridsearch_training2_"+curr_time+"_set.csv"
 
     json_filename = "gridsearch_hyper_parameter_" + curr_time + ".json"
+    json_filename_bad = "gridsearch_hyper_parameter_bad_" + curr_time + ".json"
 
     weight_filename = "gridsearch_"+curr_time+"_weight.csv"
 
@@ -93,8 +106,9 @@ class Test_glm_grid_search:
 
     lambda_scale = 50           # scale the lambda values to be higher than 0 to 1
     alpha_scale = 1.2           # scale alpha into bad ranges
-    time_scale = 0.01            # maximum runtime of
-
+    time_scale = 3            # maximum runtime scale
+    extra_time_fraction = 0.1    # since timing is never perfect, give some extra time on top of maximum runtime limit
+    min_runtime_per_epoch = 0   # minimum run time found.  Determined later
     # parameters denoting filenames with absolute paths
     training1_data_file = os.path.join(current_dir, training1_filename)
     training2_data_file = os.path.join(current_dir, training2_filename)
@@ -240,6 +254,15 @@ class Test_glm_grid_search:
         model = H2OGeneralizedLinearEstimator(family=self.family)
         model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data)
 
+        run_time = pyunit_utils.find_grid_runtime([model])  # find model train time
+        summary_list = model._model_json["output"]["model_summary"]
+        num_iteration = summary_list.cell_values[0][summary_list.col_header.index('number_of_iterations')]
+
+        if num_iteration == 0:
+            self.min_runtime_per_epoch = run_time
+        else:
+            self.min_runtime_per_epoch = run_time/num_iteration
+
         # grab all gridable parameters and its type
         (self.gridable_parameters, self.gridable_types, self.gridable_defaults) = \
             pyunit_utils.get_gridables(model._model_json["parameters"])
@@ -247,7 +270,7 @@ class Test_glm_grid_search:
         # randomly generate griddable parameters including values outside legal range, like setting alpha values to
         # be outside legal range of 0 and 1
         (self.hyper_params_bad, self.gridable_parameters, self.gridable_types, self.gridable_defaults) = \
-            pyunit_utils.gen_grid_search(model._parms.keys(), self.hyper_params_bad, self.exclude_parameter_lists,
+            pyunit_utils.gen_grid_search(model.full_parameters.keys(), self.hyper_params_bad, self.exclude_parameter_lists,
                                          self.gridable_parameters, self.gridable_types, self.gridable_defaults,
                                          random.randint(1, self.max_int_number),
                                          self.max_int_val, self.min_int_val,
@@ -258,8 +281,9 @@ class Test_glm_grid_search:
         if "lambda" in list(self.hyper_params_bad):
             self.hyper_params_bad["lambda"] = [self.lambda_scale * x for x in self.hyper_params_bad["lambda"]]
 
+        time_scale = self.time_scale * run_time
         if "max_runtime_secs" in list(self.hyper_params_bad):
-            self.hyper_params_bad["max_runtime_secs"] = [self.time_scale * x for x
+            self.hyper_params_bad["max_runtime_secs"] = [time_scale * x for x
                                                          in self.hyper_params_bad["max_runtime_secs"]]
 
         self.possible_number_models = pyunit_utils.count_models(self.hyper_params_bad)
@@ -275,10 +299,9 @@ class Test_glm_grid_search:
         self.possible_number_models = int(self.possible_number_models * len_good_alpha * len_good_lambda *
                                           len_good_time/ (alpha_len * lambda_len * time_len))
 
-
         # randomly generate griddable parameters with only good values
         (self.hyper_params, self.gridable_parameters, self.gridable_types, self.gridable_defaults) = \
-            pyunit_utils.gen_grid_search(model._parms.keys(), self.hyper_params, self.exclude_parameter_lists,
+            pyunit_utils.gen_grid_search(model.full_parameters.keys(), self.hyper_params, self.exclude_parameter_lists,
                                          self.gridable_parameters, self.gridable_types, self.gridable_defaults,
                                          random.randint(1, self.max_int_number),
                                          self.max_int_val, 0,
@@ -292,19 +315,15 @@ class Test_glm_grid_search:
             self.hyper_params["lambda"] = [self.lambda_scale * x for x in self.hyper_params["lambda"]]
 
         if "max_runtime_secs" in list(self.hyper_params):
-            self.hyper_params["max_runtime_secs"] = [self.time_scale * x for x
+            self.hyper_params["max_runtime_secs"] = [time_scale * x for x
                                                      in self.hyper_params["max_runtime_secs"]]
 
         # write out the jenkins job info into log files.
-        json_file = os.path.join(self.sandbox_dir, self.json_filename)
+        pyunit_utils.write_hyper_parameters_json(self.current_dir, self.sandbox_dir, self.json_filename_bad,
+                                                 self.hyper_params_bad)
 
-        # save hyper-parameter file in test directory
-        with open(os.path.join(self.current_dir, self.json_filename), 'w') as test_file:
-            json.dump(self.hyper_params, test_file)
-
-        # save hyper-parameter file in sandbox
-        with open(json_file,'w') as test_file:
-            json.dump(self.hyper_params, test_file)
+        pyunit_utils.write_hyper_parameters_json(self.current_dir, self.sandbox_dir, self.json_filename,
+                                                 self.hyper_params)
 
     def tear_down(self):
         """
@@ -330,14 +349,18 @@ class Test_glm_grid_search:
 
     def test1_glm_grid_search_over_params(self):
         """
-        test1_glm_grid_search_over_params: grab all truely griddable parameters and randomly set
-        the parameter values if possible.  Otherwise, manually set those parameter values.  Next,
-        build many H2O GLM models using grid search.  Next, for each model built using grid search,
-        we will extract the parameters used in building that model and manually build a H2O GLM
-        model.  MSEs are calculated from a test set to compare the performance of grid search model
-        and our manually built model.  If their MSEs are close, declare test success.  Otherwise,
-        declare test failure.  Bad hyper-parameter values will set here to make sure no model is built
-        for those bad parameter values.  We should instead get a warning/error message printed out.
+        test1_glm_grid_search_over_params: test for condition 1 and performs the following:
+        a. grab all truely griddable parameters and randomly or manually
+        set the parameter values.
+        b. Next, build H2O GLM models using grid search.  Count and make sure models
+        are only built for hyper-parameters set to legal values.  No model is built for bad hyper-parameter
+        values will set here to make sure no model is built.  We should instead get a warning/error message printed out.
+        c. For each model built using grid search, we will extract the parameters used in building
+        that model and manually build a H2O GLM model.  MSEs are calculated from a test set
+        to compare the performance of grid search model and our manually built model.  If their MSEs
+        are close, declare test success.  Otherwise, declare test failure.
+        d. we will check and make sure the models are built within the time limit that was set
+        for it as well.  If max_runtime_secs was exceeded by too much, declare test failure as well.
         """
         print("*******************************************************************************************")
         print("test1_glm_grid_search_over_params for GLM " + self.family)
@@ -352,38 +375,75 @@ class Test_glm_grid_search:
 
             self.correct_model_number = len(grid_model)     # store number of models built
 
-            if not (self.correct_model_number == self.possible_number_models):
+            # check the total run time allowed and if the model has exceeded the run time allowed
+            total_gridsearch_runtime = pyunit_utils.find_grid_runtime(grid_model)
+
+            # add parameters into params_dict.  Use this to build parameters for model
+            params_dict = {}
+            params_dict["family"] = self.family
+            params_dict["nfolds"] = self.nfolds
+            total_run_time_limits = 0.0   # calculate upper bound of max_runtime_secs
+            true_run_time_limits = 0.0
+            manual_run_runtime = 0.0
+
+            # compare performance of model built by gridsearch with manually built model
+            for each_model in grid_model:
+
+                # grab parameters used by grid search and build a dict out of it
+                params_list = pyunit_utils.extract_used_params(self.hyper_params_bad.keys(), each_model.params,
+                                                               params_dict)
+
+                if "max_runtime_secs" in params_list:
+                    max_runtime = params_list["max_runtime_secs"]
+                    del params_list["max_runtime_secs"]
+                else:
+                    max_runtime = 0
+
+                manual_model = H2OGeneralizedLinearEstimator(**params_list)
+                manual_model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data,
+                                   max_runtime_secs=max_runtime)
+
+                model_runtime = pyunit_utils.find_grid_runtime([manual_model])  # time taken to build this model
+                manual_run_runtime += model_runtime
+
+                summary_list = manual_model._model_json['output']['model_summary']
+                iteration_num = summary_list.cell_values[0][summary_list.col_header.index('number_of_iterations')]
+
+                if max_runtime > 0:
+                    # shortest possible time it takes to build this model
+                    if (max_runtime < self.min_runtime_per_epoch) or (iteration_num <= 1):
+                        total_run_time_limits += model_runtime
+                    else:
+                        total_run_time_limits += max_runtime
+
+                true_run_time_limits += max_runtime
+
+                # compute and compare test metrics between the two models
+                test_grid_model_metrics = each_model.model_performance(test_data=self.training2_data)
+                test_manual_model_metrics = manual_model.model_performance(test_data=self.training2_data)
+
+                # just compare the mse in this case within tolerance:
+                if abs(test_grid_model_metrics.mse() - test_manual_model_metrics.mse()) > self.allowed_diff:
+                    self.test_failed += 1             # count total number of tests that have failed
+                    self.test_failed_array[self.test_num] += 1
+                    print("test1_glm_grid_search_over_params for GLM failed: grid search model and manually "
+                          "built H2O model differ too much in test MSE!")
+                    break
+
+            total_run_time_limits = max(total_run_time_limits, true_run_time_limits) * (1+self.extra_time_fraction)
+
+            if not (self.correct_model_number == self.possible_number_models):  # wrong grid model number
+                self.test_failed += 1
+                self.test_failed_array[self.test_num] = 1
+                print("test1_glm_grid_search_over_params for GLM failed: number of models built by gridsearch "
+                    "does not equal to all possible combinations of hyper-parameters")
+
+            if not((total_gridsearch_runtime <= total_run_time_limits) and
+                       (manual_run_runtime <= total_run_time_limits)):
                 self.test_failed += 1
                 self.test_failed_array[self.test_num] = 1
                 print("test1_glm_grid_search_over_params for GLM failed: number of models built by gridsearch "
                       "does not equal to all possible combinations of hyper-parameters")
-
-            if (self.test_failed_array[self.test_num] == 0):    # only proceed if previous test passed
-                # add parameters into params_dict.  Use this to build parameters for model
-                params_dict = {}
-                params_dict["family"] = self.family
-                params_dict["nfolds"] = self.nfolds
-
-                # compare performance of model built by gridsearch with manually built model
-                for each_model in grid_model:
-
-                    # grab parameters used by grid search and build a dict out of it
-                    params_list = pyunit_utils.extract_used_params(self.hyper_params_bad.keys(), each_model.params,
-                                                                   params_dict)
-                    manual_model = H2OGeneralizedLinearEstimator(**params_list)
-                    manual_model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data)
-
-                    # compute and compare test metrics between the two models
-                    test_grid_model_metrics = each_model.model_performance(test_data=self.training2_data)
-                    test_manual_model_metrics = manual_model.model_performance(test_data=self.training2_data)
-
-                    # just compare the mse in this case within tolerance:
-                    if abs(test_grid_model_metrics.mse() - test_manual_model_metrics.mse()) > self.allowed_diff:
-                        self.test_failed += 1             # count total number of tests that have failed
-                        self.test_failed_array[self.test_num] += 1
-                        print("test1_glm_grid_search_over_params for GLM failed: grid search model and manually "
-                              "built H2O model differ too much in test MSE!")
-                        break
 
             self.test_num += 1
 
