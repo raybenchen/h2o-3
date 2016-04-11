@@ -4,7 +4,7 @@ source("../../../runitUtils/utilsR.R")
 
 #   This test is written to test the gridsearch according to PUBDEV-1843: subtask 7, 8.  Basically,
 #   We need to perform the following two tests:
-#   1. Only valid parameter names and values are specified in the hyperparameters.
+#   1. For all parameter names and values that are specified in the hyperparameters.
 #       a. If an illegal name is specified, an exception should be thrown.
 #       b. If a bad value is specified, a warning message will be printed in this case to warn the user
 #          of the bad parameter type.  An exception should not be thrown in this case.  We do not want
@@ -13,8 +13,7 @@ source("../../../runitUtils/utilsR.R")
 #   2. If a user specifies a parameter in both the hyper parameter and the model parameters, the parameter
 #      value can be set in two ways:
 #       a. the parameter is set to default value in the model parameter;
-#       b. if the parameter is not set to default, it is set to one of the values in the hyper-parameter
-#          list for that parameter.  This case should generate an exception.
+#       b. if the parameter is not set to default, an exception should be generated
 #
 #   This test performs test 1 using GLM with Gaussian distribution.  The following tasks are performed:
 #   1. Random data set with random size is first generated;
@@ -29,7 +28,7 @@ source("../../../runitUtils/utilsR.R")
 
 test.GLM.Gaussian.Grid.Test1.SyntheticData <- function() {
   # set random seed to generate random dataset
-  set.seed(as.numeric(Sys.time()))
+  set.seed(as.integer(Sys.time()))
   
   # setup parameters that control dataset size
   max_col_count = 4
@@ -53,6 +52,7 @@ test.GLM.Gaussian.Grid.Test1.SyntheticData <- function() {
   
   lambda_scale = 100
   alpha_scale = 1.2
+  time_scale = 0.01
   
   test_failed = 1   # set to 1 if test has failed for some reason, default to be bad
   
@@ -79,7 +79,7 @@ test.GLM.Gaussian.Grid.Test1.SyntheticData <- function() {
   # generate random hyper-parameter for gridsearch
   hyper_parameters$alpha = runif(max_real_number, min_real_val, max_real_val)
   hyper_parameters$lambda = runif(max_real_number, min_real_val*lambda_scale, max_real_val*lambda_scale)
-  hyper_parameters$max_runtime_secs = runif(max_real_number, min_real_val, max_real_val)
+  hyper_parameters$max_runtime_secs = runif(max_real_number, min_real_val*time_scale, max_real_val*time_scale)
   
   # count upper bound on number of grid search model that can be built
   correct_model_number = hyperSpaceDimension(hyper_parameters)
@@ -98,8 +98,6 @@ test.GLM.Gaussian.Grid.Test1.SyntheticData <- function() {
   # introduce randomly more errors into hyper-parameter list
   error_number = round(runif(1, 0, 2))
 
-  browser()
-  
   # need to take out the bad argument values like negative values or values exceeding 1
   if (error_number == 0) {
     alpha_length = length(hyper_parameters[['alpha']])
@@ -128,7 +126,7 @@ test.GLM.Gaussian.Grid.Test1.SyntheticData <- function() {
       test_failed = 0
     }
   } else {  # fatal error is introduced here.
-    if ((correct_model_number == 0) || (error_number == 1)) {
+    if ((correct_model_number == 0) || (error_number == 1) || (error_number == 2)) {
       # exceptions should have been thrown in this case and it did
       test_failed = 0
     }
