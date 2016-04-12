@@ -2062,9 +2062,9 @@ def insert_error_grid_search(hyper_params, gridable_parameters, gridable_types, 
     error_hyper_params = copy.deepcopy(hyper_params)
 #    error_hyper_params = {k : v for k, v in hyper_params.items()}
 
-    param_index = random.randint(0, len(gridable_parameters)-1)
-    param_name = gridable_parameters[param_index]
-    param_type = gridable_types[param_index]
+    param_index = random.randint(0, len(hyper_params)-1)
+    param_name = list(hyper_params)[param_index]
+    param_type = gridable_types[gridable_parameters.index(param_name)]
 
     if error_number == 0:   # grab a hyper-param randomly and copy its name twice
         new_name = param_name+param_name

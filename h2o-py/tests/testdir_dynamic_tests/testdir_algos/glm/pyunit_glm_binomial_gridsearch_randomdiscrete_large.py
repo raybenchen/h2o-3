@@ -99,7 +99,7 @@ class Test_glm_random_grid_search:
     allowed_scaled_model_number = 1.5   # used to set max_model_number as
     # possible_number_models * allowed_scaled_model_number
     max_stopping_rounds = 10            # maximum stopping rounds allowed to be used for early stopping metric
-    max_tolerance = 0.01                   # maximum tolerance to be used for early stopping metric
+    max_tolerance = 0.01                # maximum tolerance to be used for early stopping metric
 
     family = 'binomial'     # set gaussian as default
 
