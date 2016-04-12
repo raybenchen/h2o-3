@@ -168,8 +168,8 @@ def import_file(path=None, destination_frame="", parse=True, header=(-1, 0, 1), 
     return H2OFrame()._import_parse(path, destination_frame, header, sep, col_names,
                                     col_types, na_strings)
 
-def import_sql_table(connection_url, table, username, password, optimize=None):
-  """Import SQL table to H2OFrame in memory.
+def read_sql_table(connection_url, table, username, password, optimize=None):
+  """Read SQL table to H2OFrame in memory.
   
   Parameters
   ----------
@@ -181,10 +181,10 @@ def import_sql_table(connection_url, table, username, password, optimize=None):
       Name of SQL table
       
     username : str
-      Username of SQL server
+      Username for SQL server
       
     password : str
-      Password of SQL server
+      Password for SQL server
       
     optimize : bool, default is True
       Optimize import of SQL table for faster imports. Experimental.  
