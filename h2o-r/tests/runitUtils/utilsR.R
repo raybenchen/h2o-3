@@ -503,3 +503,137 @@ find_grid_runtime <- function(model_ids) {
 
   return(total_run_time/1000.0)
 }
+
+#----------------------------------------------------------------------
+# runMetricStop run the randomized gridsearch with values specified in the function argument lists and
+# return true if the test passed or false if the test failed.  The metric stopping condition will be manually
+# calculated and compare to the results returned by Java.
+#
+# Parameters:  predictor_names -- list of structures that contains all hyper-parameter specifications
+#              response_name -- Integer, denoting how to generate model parameter value
+#              train_data
+#              family -- string, denoting family for GLM algo 'binomial' or 'gaussian'
+#              nfolds -- integer, number of folds for CV
+#              hyper_parameters -- equivalent to Python dict containing hyper-parameters for gridsearch
+#              search_criteria -- equivalent to Python dict representing parameters passed to randomized gridsearch
+#              is_decreasing -- boolean: true if metric is optimized by decreasing and vice versa
+#              possible_model_number -- integer, possible number of grid search model built with currenty hyper-parameter
+#
+# Returns:     boolean representing test success/failure
+#----------------------------------------------------------------------
+runGLMMetricStop <- function(predictor_names, response_name, train_data, family, nfolds, hyper_parameters, 
+                             search_criteria, is_decreasing, possible_model_number) {
+
+  # start grid search
+  glm_grid1 = h2o.grid("glm", grid_id="glm_grid1", x=predictor_names, y=response_name, training_frame=train_data,
+                       family=family, nfolds=nfolds, hyper_params=hyper_parameters, search_criteria=search_criteria)
+  
+  tolerance = search_criteria[["stopping_tolerance"]]
+  stop_round = search_criteria[["stopping_rounds"]]
+  num_models_built = length(glm_grid1@model_ids)
+    
+  min_list_len = 2*stop_round
+  metric_list = c()
+  stop_now = FALSE
+    
+  # sort model_ids built by time, oldest one first
+  sorted_model_metrics = sort_model_metrics_by_time(glm_grid1@model_ids, search_criteria[["stopping_metric"]])
+
+  for (metric_value in sorted_model_metrics) {
+    metric_list = c(metric_list, metric_value)
+    
+    if (length(metric_list) > min_list_len) {   # start processing when you have enough models
+      stop_metric_list = evaluate_early_stopping(metric_list, stop_round, tolerance, is_decreasing)
+      stop_now = stop_metric_list[[1]]
+      metric_list = stop_metric_list[[2]]
+    }
+    
+    if (stop_now) {
+      if (length(metric_list) < num_models_built) {
+        return(FALSE)
+      } else {
+        return(TRUE)
+      }
+    }
+  }
+  
+  if (length(metric_list) == possible_model_number) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+
+#----------------------------------------------------------------------
+# evaluate_early_stopping mimics the early stopping function as implemented in ScoreKeeper.java.  
+# Please see the Java file comment to see the explanation of how the early stopping works.
+# 
+# Parameters: metric_list: list containing the optimization metric under consideration for gridsearch model
+#             stop_round:  integer, determine averaging length
+#             tolerance:   real, tolerance to see if the grid search model has improved enough to stop
+#             is_decreasing:    bool: True if metric is optimized as it gets smaller and vice versa
+#
+# Returns:    bool indicating if we should stop early and sorted metric_list
+#----------------------------------------------------------------------
+evaluate_early_stopping <- function(metric_list, stop_round, tolerance, is_decreasing) {
+  metric_list = sort(metric_list, decreasing=is_decreasing)
+  
+  metric_len = length(metric_list)
+  
+  start_index = metric_len - 2*stop_round + 1   # start index for reference, start at 1
+  stop_length = stop_round - 1
+  all_moving_values = c()
+  
+  for (index in 0:stop_round) {
+    index_start = start_index + index
+    all_moving_values = c(all_moving_values, sum(metric_list[index_start:(index_start+stop_length)]))
+  }
+  
+  if (((min(all_moving_values) > 0) && (max(all_moving_values) > 0)) || 
+      ((min(all_moving_values) < 0) && (max(all_moving_values) < 0))) {
+    
+    reference_value = all_moving_values[1]
+    last_value = all_moving_values[length(all_moving_values)]
+  
+    if (((reference_value > 0) && (last_value > 0)) || ((reference_value < 0) && (last_value < 0))) {
+      ratio = last_value / reference_value
+  
+      if (!(is_decreasing)) {
+        return (list(!(ratio > 1+tolerance), metric_list))
+      } else {
+        return(list(!(ratio < 1-tolerance), metric_list))
+      }
+  
+    } else {   # zero in reference metric, or sign of metrics differ, marked as not yet converge
+      return(list(FALSE, metric_list))
+    }
+  } else {
+    return(list(FALSE, metric_list))
+  }
+}
+
+#----------------------------------------------------------------------
+# sort_model_metrics_by_time will sort the model by time.  The oldest model will come first.
+# Next, it will build a list containing the metrics of the oldest model first followed by
+# later model metrics.
+#
+# Parameters:  model_ids -- list of string containing model id which we can get a model out of
+#              metric_name -- string, denoting the metric's name that we are optimizing over.
+#
+# Returns:     metric_list : list of metrics value sorted by time, oldest metric will come first
+#----------------------------------------------------------------------
+sort_model_metrics_by_time <- function(model_ids, metric_name) {
+  all_models = lapply(model_ids, function(id) {model = h2o.getModel(id)})
+  sorted_metrics = rep(0, length(model_ids))
+  
+  for (model_id in model_ids) {
+    # find id of the model, starting from 0
+    temp_list = strsplit(model_id, '_')[[1]]
+    index = as.integer(temp_list[length(temp_list)])
+    the_model = all_models[index+1][[1]]
+    # get the metric value and put it in right place
+    sorted_metrics[index+1] = the_model@model$cross_validation_metrics@metrics[[metric_name]]
+  }
+  
+  return(sorted_metrics)
+}
