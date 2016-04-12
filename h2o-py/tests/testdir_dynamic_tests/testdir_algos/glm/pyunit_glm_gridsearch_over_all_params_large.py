@@ -509,7 +509,7 @@ class Test_glm_grid_search:
             if (error_number[0] <= 2) and (error_number[0] >= 0):
                 print("test2_illegal_name_value passed: exception is thrown for illegal parameter name or empty"
                   "hyper-parameter parameter list.")
-            else
+            else:
                 self.test_failed += 1
                 self.test_failed_array[self.test_num] = 1
                 print("test2_illegal_name_value failed: exception should not have been thrown but did!")
