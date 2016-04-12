@@ -2265,36 +2265,35 @@ def evaluate_metrics_stopping(model_list, metric_name, bigger_is_better, search_
 
     :return: bool indicating if the early topping condition is justified
     """
-    if ("stopping_tolerance" in search_criteria) and ("stopping_rounds" in search_criteria):
-        tolerance = search_criteria["stopping_tolerance"]
-        stop_round = search_criteria["stopping_rounds"]
 
-        min_list_len = 2*stop_round     # minimum length of metrics needed before we start early stopping evaluation
+    tolerance = search_criteria["stopping_tolerance"]
+    stop_round = search_criteria["stopping_rounds"]
 
-        metric_list = []    # store metric of optimization
-        stop_now = False
+    min_list_len = 2*stop_round     # minimum length of metrics needed before we start early stopping evaluation
 
-        # provide metric list sorted by time.  Oldest model appear first.
-        metric_list_time_ordered = sort_model_by_time(model_list, metric_name)
+    metric_list = []    # store metric of optimization
+    stop_now = False
 
-        for metric_value in metric_list_time_ordered:
-            metric_list.append(metric_value)
+    # provide metric list sorted by time.  Oldest model appear first.
+    metric_list_time_ordered = sort_model_by_time(model_list, metric_name)
 
-            if len(metric_list) > min_list_len:     # start early stopping evaluation now
-                stop_now, metric_list = evaluate_early_stopping(metric_list, stop_round, tolerance, bigger_is_better)
+    for metric_value in metric_list_time_ordered:
+        metric_list.append(metric_value)
 
-            if stop_now:
-                if len(metric_list) < len(model_list):  # could have stopped early in randomized gridsearch
-                    return False
-                else:       # randomized gridsearch stopped at the correct condition
-                    return True
-    else:
-        print("Error: stopping_tolerance and stopping_rounds must be found in your search_criteria.")
+        if len(metric_list) > min_list_len:     # start early stopping evaluation now
+            stop_now, metric_list = evaluate_early_stopping(metric_list, stop_round, tolerance, bigger_is_better)
+
+        if stop_now:
+            if len(metric_list) < len(model_list):  # could have stopped early in randomized gridsearch
+                return False
+            else:       # randomized gridsearch stopped at the correct condition
+                return True
 
     if len(metric_list) == possible_model_number:   # never meet early stopping condition at end of random gridsearch
         return True     # if max number of model built, still ok
     else:
         return False    # early stopping condition never met but random gridsearch did not build all models, bad!
+
 
 def sort_model_by_time(model_list, metric_name):
     """
@@ -2340,7 +2339,7 @@ def evaluate_early_stopping(metric_list, stop_round, tolerance, bigger_is_better
     start_index = metric_len - 2*stop_round     # start index for reference
     all_moving_values = []
 
-    # this part is purely used to make sure we agree with ScoreKeeper.java implementation
+    # this part is purely used to make sure we agree with ScoreKeeper.java implementation, not efficient all
     for index in range(stop_round+1):
         index_start = start_index+index
         all_moving_values.append(sum(metric_list[index_start:index_start+stop_round]))
