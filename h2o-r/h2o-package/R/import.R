@@ -169,8 +169,7 @@ h2o.read_sql_table <- function(connection_url, table, username, password, optimi
   parms$username <- username
   parms$password <- password
   if (!is.null(optimize)) parms$optimize <- optimize
-  print(parms)
-  res <- .h2o.__remoteSend('ImportSQLTable', method = "POST", .params = parms, h2oRestApiVersion = 99)
+  res <- .h2o.__remoteSend('ReadSQLTable', method = "POST", .params = parms, h2oRestApiVersion = 99)
   job_key <- res$key$name
   dest_key <- res$dest$name
   .h2o.__waitOnJob(job_key)

@@ -196,7 +196,7 @@ def read_sql_table(connection_url, table, username, password, optimize=None):
   p = {}
   p.update({k:v for k,v in locals().items() if k is not "p"})
   p["_rest_version"] = 99
-  j = H2OJob(H2OConnection.post_json(url_suffix="ImportSQLTable", **p), "Import SQL Table").poll()
+  j = H2OJob(H2OConnection.post_json(url_suffix="ReadSQLTable", **p), "Import SQL Table").poll()
   return get_frame(j.dest_key)
 
 def parse_setup(raw_frames, destination_frame="", header=(-1,0,1), separator="", column_names=None, column_types=None, na_strings=None):

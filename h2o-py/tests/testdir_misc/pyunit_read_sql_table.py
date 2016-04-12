@@ -19,10 +19,10 @@ def is_equal(sql, csv):
   for i in range(len(sql)):
     for j in range(len(sql[i])):
       if sql[i][j] != csv[i][j] and "{0:.4f}".format(float(sql[i][j])) != "{0:.4f}".format(float(csv[i][j])):
-        print sql[i][j], csv[i][j]
-        print sql[i]
-        print csv[i]
-        print i, j
+        print(sql[i][j], csv[i][j])
+        print(sql[i])
+        print(csv[i])
+        print(i, j)
         return False
   return True
   

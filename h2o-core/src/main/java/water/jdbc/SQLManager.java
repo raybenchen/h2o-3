@@ -22,8 +22,8 @@ public class SQLManager {
    * @param password (Input)
    * @param optimize (Input)                
    */
-  public static Job<Frame> importSqlTable(final String connection_url, final String table, final String username, final String password,
-                                          boolean optimize) {
+  public static Job<Frame> readSqlTable(final String connection_url, final String table, final String username, final String password,
+                                        boolean optimize) {
     
     Connection conn = null;
     Statement stmt = null;
