@@ -151,9 +151,9 @@ h2o.uploadFile <- function(path, destination_frame = "",
 }
 
 #'
-#' Read SQL Table into H2O
+#' Import SQL Table into H2O
 #'
-#' Reads SQL table into an H2O cloud.
+#' Imports SQL table into an H2O cloud.
 #'
 #' @param connection_url URL of the SQL database connection as specified by the Java Database Connectivity (JDBC) Driver.
 #'        For example, "jdbc:mysql://localhost:3306/menagerie?&useSSL=false"
@@ -162,14 +162,15 @@ h2o.uploadFile <- function(path, destination_frame = "",
 #' @param password Password for SQL server
 #' @param optimize (Optional) Optimize import of SQL table for faster imports. Experimental. Default is true. 
 #' @export
-h2o.read_sql_table <- function(connection_url, table, username, password, optimize = NULL) {
+h2o.import_sql_table <- function(connection_url, table, username, password, optimize = NULL) {
   parms <- list()
   parms$connection_url <- connection_url
   parms$table <- table
   parms$username <- username
   parms$password <- password
   if (!is.null(optimize)) parms$optimize <- optimize
-  res <- .h2o.__remoteSend('ReadSQLTable', method = "POST", .params = parms, h2oRestApiVersion = 99)
+  print(parms)
+  res <- .h2o.__remoteSend('ImportSQLTable', method = "POST", .params = parms, h2oRestApiVersion = 99)
   job_key <- res$key$name
   dest_key <- res$dest$name
   .h2o.__waitOnJob(job_key)

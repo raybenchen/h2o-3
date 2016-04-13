@@ -9,7 +9,7 @@ import water.jdbc.SQLManager;
 
 import static org.junit.Assert.assertTrue;
 
-public class ReadSQLTest extends TestUtil{
+public class ImportSQLTest extends TestUtil{
   private String conUrl = "jdbc:mysql://172.16.2.178:3306/ingestSQL?&useSSL=false";
   String user = "root";
   String password = "0xdata";
@@ -21,7 +21,7 @@ public class ReadSQLTest extends TestUtil{
   @Test
   public void citibike20k() {
     String table = "citibike20k";
-    Frame sql_f = SQLManager.readSqlTable(conUrl, table, user, password, optimize).get();
+    Frame sql_f = SQLManager.importSqlTable(conUrl, table, user, password, optimize).get();
     assertTrue(sql_f.numRows() == 2e4);
     assertTrue(sql_f.numCols() == 15);
     sql_f.delete();
@@ -30,7 +30,7 @@ public class ReadSQLTest extends TestUtil{
   @Test
   public void allSQLTypes() {
     String table = "allSQLTypes";
-    Frame sql_f = SQLManager.readSqlTable(conUrl, table, user, password, optimize).get();
+    Frame sql_f = SQLManager.importSqlTable(conUrl, table, user, password, optimize).get();
     sql_f.delete();
     
   }
@@ -40,7 +40,7 @@ public class ReadSQLTest extends TestUtil{
     String conUrl = "jdbc:mysql://localhost:3306/menagerie?&useSSL=false";
     String table = "air";
     String password = "ludi";
-    Frame sql_f = SQLManager.readSqlTable(conUrl, table, user, password, optimize).get();
+    Frame sql_f = SQLManager.importSqlTable(conUrl, table, user, password, optimize).get();
     sql_f.delete();
   }
   
