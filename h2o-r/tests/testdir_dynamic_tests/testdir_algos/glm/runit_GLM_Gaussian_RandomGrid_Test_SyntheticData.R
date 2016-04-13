@@ -43,6 +43,7 @@ test.GLM.Gaussian.RandomGrid.Test.SyntheticData <- function() {
   min_time_val = 0  # meaningful lower bound for max_runtime_secs, determined later
   max_real_number = 5
   time_scale = 2
+  model_number_scale = 1
   max_runtime_scale = 3
   
   lambda_scale = 100
@@ -62,10 +63,10 @@ test.GLM.Gaussian.RandomGrid.Test.SyntheticData <- function() {
   train_row_count = train_col_count * round(runif(1, min_col_count_ratio, max_col_count_ratio))
   
   # for DEBUGGING
-#   train_col_count = 3
-#   train_row_count = 400
-#   max_int_val = 3
-#   max_real_number = 3
+#    train_col_count = 3
+#    train_row_count = 400
+#    max_int_val = 1
+#    max_real_number = 1
   ##### ENd Debugging
   
   # Setup up test, generate trainin data
@@ -135,7 +136,7 @@ test.GLM.Gaussian.RandomGrid.Test.SyntheticData <- function() {
   rm(glm_grid1)
   
   # setup search-criteria for test2: test stopping condition max_model
-  search_criteria$max_models = round(runif(1, 1, correct_model_number * 1.2))
+  search_criteria$max_models = round(runif(1, 1, correct_model_number * model_number_scale))
   
   Log.info("Test2: Search criteria used to train gridsearch:")
   print(search_criteria)  # print out search criteria used
@@ -239,8 +240,6 @@ test.GLM.Gaussian.RandomGrid.Test.SyntheticData <- function() {
     throw("runit_GLM_Gaussian_RandomGrid_Test_SyntheticData.R has failed.  I am sorry.")
   }
 }
-
-
 
 doTest("GLM Gaussian Grid Test: PUBDEV-1843, subtask 9, check stopping conditions. ", test.GLM.Gaussian.RandomGrid.Test.SyntheticData)
 

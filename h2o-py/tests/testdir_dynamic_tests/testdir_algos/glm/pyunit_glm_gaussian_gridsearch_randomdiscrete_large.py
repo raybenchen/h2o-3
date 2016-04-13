@@ -334,13 +334,11 @@ class Test_glm_random_grid_search:
         else:
             self.max_grid_runtime = pyunit_utils.find_grid_runtime(random_grid_model)   # time taken to build all models
 
-
         if self.test_failed_array[self.test_num] == 0:
             print("test1_glm_random_grid_search_model_number for GLM: passed!")
 
         self.test_num += 1
         sys.stdout.flush()
-
 
     def test2_glm_random_grid_search_max_model(self):
         """
@@ -358,7 +356,6 @@ class Test_glm_random_grid_search:
         search_criteria = {'strategy': 'RandomDiscrete', 'max_models': self.max_model_number,
                            "seed": round(time.time())}
 
-
         print("GLM Gaussian grid search_criteria: {0}".format(search_criteria))
         print("Possible number of models built is {0}".format(self.possible_number_models))
 
@@ -369,7 +366,6 @@ class Test_glm_random_grid_search:
         grid_model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data)
 
         number_model_built = len(grid_model)    # count actual number of models built
-
 
         print("Maximum model limit is {0}.  Number of models built is {1}".format(search_criteria["max_models"],
                                                                                   number_model_built))

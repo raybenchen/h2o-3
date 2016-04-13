@@ -178,10 +178,10 @@ class Test_glm_random_grid_search:
                                                                            self.max_col_count_ratio))
 
         #  DEBUGGING setup_data, remember to comment them out once done.
-        # self.train_col_count = 3
-        # self.train_row_count = 200
-        # self.max_real_number = 5
-        # self.max_int_number = 5
+        self.train_col_count = 3
+        self.train_row_count = 200
+        self.max_real_number = 1
+        self.max_int_number = 1
         # end DEBUGGING
 
         if 'gaussian' in self.family:       # increase data range
@@ -238,6 +238,7 @@ class Test_glm_random_grid_search:
         # build bare bone model to get all parameters
         model = H2OGeneralizedLinearEstimator(family=self.family)
         model.train(x=self.x_indices, y=self.y_index, training_frame=self.training1_data)
+
         self.one_model_time = pyunit_utils.find_grid_runtime([model])  # find model train time
         print("Time taken to build a base barebone model is {0}".format(self.one_model_time))
 
@@ -406,7 +407,6 @@ class Test_glm_random_grid_search:
         print("*******************************************************************************************")
         print("test3_glm_random_grid_search_max_runtime_secs for GLM " + self.family)
         h2o.cluster_info()
-
 
         if "max_runtime_secs" in list(self.hyper_params):
             del self.hyper_params['max_runtime_secs']
