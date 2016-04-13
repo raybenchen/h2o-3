@@ -29,6 +29,7 @@ import numpy as np
 import shutil
 import string
 import copy
+import json
 
 
 def check_models(model1, model2, use_cross_validation=False, op='e'):
@@ -2362,3 +2363,25 @@ def evaluate_early_stopping(metric_list, stop_round, tolerance, bigger_is_better
             return False, metric_list
     else:
         return False, metric_list
+
+
+def write_hyper_parameters_json(dir1, dir2, json_filename, hyper_parameters):
+    """
+    This function will write a json file of the hyper_parameters in directories dir1 and dir2
+    for debugging purposes.
+
+    :param dir1: String containing first directory where you want to write the json file to
+    :param dir2: String containing second directory where you want to write the json file to
+    :param json_filename: String containing json file name
+    :param hyper_parameters: dict containing hyper-parameters used
+
+    :return: None.
+    """
+
+    # save hyper-parameter file in test directory
+    with open(os.path.join(dir1, json_filename), 'w') as test_file:
+        json.dump(hyper_parameters, test_file)
+
+    # save hyper-parameter file in sandbox
+    with open(os.path.join(dir2, json_filename), 'w') as test_file:
+        json.dump(hyper_parameters, test_file)
