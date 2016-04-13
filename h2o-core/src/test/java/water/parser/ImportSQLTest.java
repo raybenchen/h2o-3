@@ -20,7 +20,7 @@ public class ImportSQLTest extends TestUtil{
   @BeforeClass
   static public void setup() {stall_till_cloudsize(1);}
 
-  @Test
+  @Ignore @Test
   public void citibike20k() {
     String table = "citibike20k";
     Frame sql_f = SQLManager.importSqlTable(conUrl, table, user, password, columns, optimize).get();
@@ -33,7 +33,7 @@ public class ImportSQLTest extends TestUtil{
     sql_f.delete();
   }
   
-  @Test
+  @Ignore @Test
   public void allSQLTypes() {
     String table = "allSQLTypes";
     Frame sql_f = SQLManager.importSqlTable(conUrl, table, user, password, columns, optimize).get();
