@@ -20,10 +20,11 @@ public class SQLManager {
    * @param table (Input)
    * @param username (Input)
    * @param password (Input)
+   * @param columns (Input)
    * @param optimize (Input)                
    */
-  public static Job<Frame> importSqlTable(final String connection_url, final String table, final String username, final String password,
-                                          boolean optimize) {
+  public static Job<Frame> importSqlTable(final String connection_url, final String table, final String username, 
+                                          final String password, final String columns, boolean optimize) {
     
     Connection conn = null;
     Statement stmt = null;
@@ -46,7 +47,7 @@ public class SQLManager {
       rs.next();
       maxCon = rs.getInt(1);
       //get H2O column names and types 
-      rs = stmt.executeQuery("SELECT * FROM " + table + " LIMIT 0");
+      rs = stmt.executeQuery("SELECT " + columns + " FROM " + table + " LIMIT 0");
       ResultSetMetaData rsmd = rs.getMetaData();
       numCol = rsmd.getColumnCount();
 
@@ -148,7 +149,7 @@ public class SQLManager {
     H2O.H2OCountedCompleter work = new H2O.H2OCountedCompleter() {
       @Override
       public void compute2() {
-        Frame fr = new SqlTableToH2OFrame(connection_url, table, username, password, numCol, maxCon, _v.nChunks(), j).doAll(columnH2OTypes, _v)
+        Frame fr = new SqlTableToH2OFrame(connection_url, table, username, password, columns, numCol, maxCon, _v.nChunks(), j).doAll(columnH2OTypes, _v)
                 .outputFrame(destination_key, columnNames, null);
         DKV.put(fr);
         _v.remove();
@@ -162,17 +163,18 @@ public class SQLManager {
   }
 
   public static class SqlTableToH2OFrame extends MRTask<SqlTableToH2OFrame> {
-    final String _url, _table, _user, _password;
+    final String _url, _table, _user, _password, _columns;
     final int _numCol, _nChunks, _maxCon;
     final Job _job;
 
     transient ArrayBlockingQueue<Connection> sqlConn;
 
-    public SqlTableToH2OFrame(String url, String table, String user, String password, int numCol, int maxCon, int nChunks, Job job) {
+    public SqlTableToH2OFrame(String url, String table, String user, String password, String columns, int numCol, int maxCon, int nChunks, Job job) {
       _url = url;
       _table = table;
       _user = user;
       _password = password;
+      _columns = columns;
       _numCol = numCol;
       _maxCon = maxCon;
       _nChunks = nChunks;
@@ -204,7 +206,7 @@ public class SQLManager {
       Statement stmt = null;
       ResultSet rs = null;
       Chunk c0 = cs[0];
-      String sqlText = "SELECT * FROM " + _table + " LIMIT " + c0._len + " OFFSET " + c0.start();
+      String sqlText = "SELECT " + _columns + " FROM " + _table + " LIMIT " + c0._len + " OFFSET " + c0.start();
       try {
         conn = sqlConn.take();
         stmt = conn.createStatement();

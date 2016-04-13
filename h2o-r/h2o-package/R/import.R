@@ -160,16 +160,20 @@ h2o.uploadFile <- function(path, destination_frame = "",
 #' @param table Name of SQL table
 #' @param username Username for SQL server
 #' @param password Password for SQL server
+#' @param columns (Optional) Character vector of column names to import from SQL table. Default is to import all columns. 
 #' @param optimize (Optional) Optimize import of SQL table for faster imports. Experimental. Default is true. 
 #' @export
-h2o.import_sql_table <- function(connection_url, table, username, password, optimize = NULL) {
+h2o.import_sql_table <- function(connection_url, table, username, password, columns = NULL, optimize = NULL) {
   parms <- list()
   parms$connection_url <- connection_url
   parms$table <- table
   parms$username <- username
   parms$password <- password
+  if (!is.null(columns)) {
+    columns <- toString(columns)
+    parms$columns <- columns
+  }
   if (!is.null(optimize)) parms$optimize <- optimize
-  print(parms)
   res <- .h2o.__remoteSend('ImportSQLTable', method = "POST", .params = parms, h2oRestApiVersion = 99)
   job_key <- res$key$name
   dest_key <- res$dest$name

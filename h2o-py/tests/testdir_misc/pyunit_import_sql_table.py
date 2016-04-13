@@ -13,6 +13,8 @@ def sql_table():
   
   assert is_equal(py_citi_sql, py_citi_csv)
 
+  citi_sql = h2o.import_sql_table("jdbc:mysql://172.16.2.178:3306/ingestSQL?&useSSL=false", "citibike20k", "root", "0xdata", ["starttime", "bikeid"])
+  assert citi_sql.ncol == 2
 
 def is_equal(sql, csv):
   if len(sql) != len(csv) or len(sql[0]) != len(csv[0]): return False

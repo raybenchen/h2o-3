@@ -168,7 +168,7 @@ def import_file(path=None, destination_frame="", parse=True, header=(-1, 0, 1), 
     return H2OFrame()._import_parse(path, destination_frame, header, sep, col_names,
                                     col_types, na_strings)
 
-def import_sql_table(connection_url, table, username, password, optimize=None):
+def import_sql_table(connection_url, table, username, password, columns=None, optimize=None):
   """Import SQL table to H2OFrame in memory.
   
   Parameters
@@ -186,13 +186,19 @@ def import_sql_table(connection_url, table, username, password, optimize=None):
     password : str
       Password for SQL server
       
-    optimize : bool, default is True
+    columns : list of strings, optional
+      A list of column names to import from SQL table. Default is to import all columns.
+      
+    optimize : bool, optional, default is True
       Optimize import of SQL table for faster imports. Experimental.  
       
   Returns
   -------
     H2OFrame containing data of specified SQL table
 """
+  if columns is not None: 
+    if not isinstance(columns, list): raise ValueError("`columns` must be a list of column names")
+    columns = ', '.join(columns)
   p = {}
   p.update({k:v for k,v in locals().items() if k is not "p"})
   p["_rest_version"] = 99
